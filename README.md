@@ -1,9 +1,3 @@
-Thank you for providing detailed context. I’ll now create a thorough, accurate, and easy-to-follow documentation for the setup, deployment, and the decisions made during the development of the project based on the files you provided.
-
-Here’s how the documentation should be structured, including all relevant components like Docker, deployment steps, and key decisions:
-
----
-
 ## Patient Data Dashboard
 
 ### Project Overview
