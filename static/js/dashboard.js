@@ -19,7 +19,7 @@ $(document).ready(function() {
 
     // Apply filters when button is clicked
     $('#applyFilters').on('click', function() {
-        applyFilters(table);
+        loadTable();
     });
 
     // Export data on button click
@@ -55,18 +55,33 @@ function populateSelect(selector, options) {
 
 // Load patient data from API and populate table and chart
 function loadTable() {
+    const selectedDiagnosis = $('#diagnosisFilter').val(); // Get selected options
+    const selectedGender = $('#genderFilter').val();       // Get selected options
+    const selectedVisitType = $('#visitTypeFilter').val(); // Get selected options
+    const fromDate = $('#fromDate').val() || null;         // Send null if empty
+    const toDate = $('#toDate').val() || null;             // Send null if empty
+
+    // Create a query string with the selected filters
+    const queryParams = {
+        diagnosis: selectedDiagnosis,
+        gender: selectedGender,
+        visit_type: selectedVisitType,
+        from_date: fromDate,
+        to_date: toDate
+    };
+
+    // Fetch data from the backend, including filter parameters in the GET request
     $.ajax({
-        url: '/api/patient-data/',  // Adjust this URL to match your Django view
+        url: '/api/patient-data/',  // The backend endpoint
         method: 'GET',
+        data: queryParams,  // Send filter parameters as query parameters
         success: function(data) {
             console.log('Data received:', data);
-            patientData = data.filter(patient => patient.date && patient.lab_results);
-
-            // Populate DataTable with patient data
             const table = $('#patientTable').DataTable();
             table.clear();
 
-            patientData.forEach(patient => {
+            // Populate DataTable with patient data
+            data.forEach(patient => {
                 table.row.add([
                     patient.patient_id,
                     patient.date,
@@ -80,9 +95,9 @@ function loadTable() {
                 ]).draw();
             });
 
-            // Initialize or update the chart and metrics
-            updateChart(patientData);
-            calculateMetrics(patientData);
+            // Update chart and metrics with the server-filtered data
+            updateChart(data);
+            calculateMetrics(data);
         },
         error: function(xhr, status, error) {
             console.error('Error fetching data:', error);
@@ -216,51 +231,6 @@ function calculateMetrics(dataArray) {
     $('#averageLabResults').html(averageLabResultsByDiagnosis);
     $('#adverseOutcomes').html(adverseOutcomePercentageByDiagnosis);
     $('#visitsByDiagnosis').html(numberOfVisitsByDiagnosis);  // Updated with the number of visits
-}
-
-// Apply the selected filters to the table and chart
-function applyFilters(table) {
-    const selectedDiagnosis = $('#diagnosisFilter').val(); // Get multiple selected options
-    const selectedGender = $('#genderFilter').val();       // Get multiple selected options
-    const selectedVisitType = $('#visitTypeFilter').val(); // Get multiple selected options
-    const fromDate = $('#fromDate').val();
-    const toDate = $('#toDate').val();
-
-    // Filter the patient data based on the selected filters
-    const filteredData = patientData.filter(function(patient) {
-        const patientDate = new Date(patient.date); // Ensure the patient date is a valid Date object
-        const isInDateRange = (!fromDate || patientDate >= new Date(fromDate)) &&
-                              (!toDate || patientDate <= new Date(toDate));
-
-        // Handle multiple selection for Diagnosis, Gender, and Visit Type
-        const matchesDiagnosis = !selectedDiagnosis.length || selectedDiagnosis.includes(patient.diagnosis);
-        const matchesGender = !selectedGender.length || selectedGender.includes(patient.gender);
-        const matchesVisitType = !selectedVisitType.length || selectedVisitType.includes(patient.visit_type);
-
-        return matchesDiagnosis && matchesGender && matchesVisitType && isInDateRange;
-    });
-
-    // Clear the table and update with filtered data
-    table.clear();
-    filteredData.forEach(function(patient) {
-        table.row.add([
-            patient.patient_id,
-            patient.date,
-            patient.age,
-            patient.gender,
-            patient.diagnosis,
-            patient.lab_results,
-            patient.medication,
-            patient.visit_type,
-            patient.outcome
-        ]).draw();
-    });
-
-    // Update the chart with the filtered data
-    updateChart(filteredData);
-
-    // Update metrics with the filtered data
-    calculateMetrics(filteredData);
 }
 
 // Export data functionality to CSV
