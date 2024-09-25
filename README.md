@@ -1,136 +1,130 @@
-Here’s the updated **README.md** without the mention of authentication and risk score calculation features. You can copy and paste the following:
+Thank you for providing detailed context. I’ll now create a thorough, accurate, and easy-to-follow documentation for the setup, deployment, and the decisions made during the development of the project based on the files you provided.
+
+Here’s how the documentation should be structured, including all relevant components like Docker, deployment steps, and key decisions:
 
 ---
 
-```markdown
-# Patient Data Dashboard
+## Patient Data Dashboard
 
-## Overview
-
-This project is a web-based dashboard developed using **Django** and **JavaScript** to visualize patient data. The dashboard provides key insights, metrics, and trends regarding patient visits, lab results, and other medical data. It includes interactive data visualizations and filtering capabilities to help users explore patient information efficiently.
-
-## Features
-
-### 1. User Interface
-- **Key Metrics Display**:
-  - Average lab results
-  - Percentage of patients with adverse outcomes
-  - Number of visits by diagnosis
-- **Filter Options**:
-  - By diagnosis
-  - By gender
-  - By visit type
-- **Dynamic Line Chart**:
-  - Visualizes trends in lab results over time using **Chart.js**
-- **Interactive Table**:
-  - Displays individual patient records with options to **search**, **sort**, and **paginate**
-
-### 2. Backend
-- **Django Application**: Loads patient data from an SQL database.
-- **API Endpoints**: Django REST Framework (DRF) APIs serve filtered data to the frontend.
-- **Unit Tests**: Verifies filtering logic and data aggregation.
-
-### 3. Frontend
-- **Dynamic Visualizations**: Line charts built with **Chart.js**.
-- **JavaScript for Interactivity**: Data is dynamically updated based on user input.
-- **Responsive Design**: The dashboard is fully responsive across devices.
-
-### Bonus Features (Optional)
-- **CSV Export**: Allows users to export filtered patient data as a CSV file.
+### Project Overview
+This project is a **web-based dashboard** built using **Django** and **JavaScript**, which provides healthcare-related metrics and insights using patient data. The project focuses on data filtering, dynamic chart visualizations, and an interactive table for viewing individual patient records. The dashboard is containerized using **Docker** to ensure portability and ease of deployment.
 
 ---
 
-## Setup and Installation
+### 1. Project Setup Instructions
 
-### Prerequisites
+#### 1.1 Prerequisites
+Make sure you have the following tools installed on your system:
+- **Python 3.12+**
+- **Docker** and **Docker Compose**
+- **Git**
 
-- [Python 3.12+](https://www.python.org/downloads/)
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+#### 1.2 Cloning the Project
 
-### Steps to Set Up the Project
+First, clone the project repository from GitHub and navigate to the project directory:
 
-1. **Clone the repository**:
+```bash
+git clone https://github.com/yourusername/patient-dashboard.git
+cd patient-dashboard
+```
 
-   ```bash
-   git clone https://github.com/yourusername/patient-dashboard.git
-   cd patient-dashboard
-   ```
+#### 1.3 Environment Configuration
 
-2. **Create a `.env` file** for environment variables in the project root:
+Create a `.env` file in the root of the project to store sensitive environment variables:
 
-   ```bash
-   SECRET_KEY=your-secret-key
-   DEBUG=True  # Set to False in production
-   DJANGO_ALLOWED_HOSTS=localhost  # Adjust for production
-   ```
+```bash
+SECRET_KEY=your-secret-key  # Set this to a random, secure value for production
+DEBUG=True  # Set this to False for production environments
+DJANGO_ALLOWED_HOSTS=localhost  # Update this with your production domain or server IP
+```
 
-3. **Run the project with Docker**:
+#### 1.4 Running the Project with Docker
+
+1. **Build and Run the Docker Containers**:
+   Using Docker Compose, you can easily spin up the environment by running the following command in the project directory:
 
    ```bash
    docker compose up --build
    ```
 
-4. **Run migrations**:
+   This command will:
+   - Build the **Django** web app container.
+   - Start the **Nginx** container to serve as a reverse proxy.
+   - Serve the application on `http://localhost`.
 
-   After the containers are running, apply database migrations:
+2. **Run Database Migrations**:
+   After the services are up and running, you’ll need to apply the database migrations to set up the SQLite database:
 
    ```bash
    docker compose exec web python manage.py migrate
    ```
 
-5. **Collect static files** (for production):
+3. **Collect Static Files**:
+   In a production setting, Django needs to collect static files like CSS and JavaScript into a single location. Run the following command to collect the static files:
 
    ```bash
    docker compose exec web python manage.py collectstatic --noinput
    ```
 
-6. **Access the application**:
-
-   Open your browser and navigate to `http://localhost` to view the dashboard.
-
----
-
-## API Endpoints
-
-- **`/api/patients/`**: Fetches a list of patient records with optional filters.
-- **`/api/lab-results/`**: Retrieves lab results data for the dynamic chart.
+4. **Access the Dashboard**:
+   Once everything is set up, open your browser and go to `http://localhost` to view the dashboard.
 
 ---
 
-## Features Explanation
+### 2. Key Components and Architecture
 
-### API Data Filtering
-The API provides filtered data based on user selections such as diagnosis, gender, and visit type. These filters allow the dashboard to narrow down the data displayed, updating the charts and patient records dynamically.
+#### 2.1 Dockerfile
 
-### Charts and Data Visualization
-The dashboard features dynamic line charts built with **Chart.js** that visualize trends in patient lab results over time. The data in these charts is updated based on the selected filters.
+The **Dockerfile** describes how the application container is built. Key steps include installing dependencies, collecting static files, and setting up the Gunicorn server to run the Django app.
 
-### Table of Patient Records
-An interactive table is included to display individual patient records. Users can:
-- Search for specific patients.
-- Sort the table based on columns (e.g., name, diagnosis, visit type).
-- Paginate through the list of records for better usability.
+**Key Features:**
+- **Python 3.12-slim** is used as the base image to reduce image size.
+- **Gunicorn** is used as the WSGI server to serve the Django app efficiently in a production environment.
+- **Static file collection** is automated during the Docker image build process, so you don’t need to manage static files separately.
 
----
+Here's an excerpt from the `Dockerfile`:
 
-## Unit Testing
+```dockerfile
+# Step 1: Use Python 3.12-slim as a base image
+FROM python:3.12-slim
 
-To ensure the accuracy of the filtering logic and data aggregation, unit tests are included. You can run the tests with the following command:
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-```bash
-docker compose exec web python manage.py test
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project files into the container
+COPY . /app/
+
+# Collect static files for production
+RUN python manage.py collectstatic --noinput
+
+# Expose port 8000 for Gunicorn
+EXPOSE 8000
+
+# Run the app using Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "health_dashboard.wsgi:application"]
 ```
 
-This will run tests to verify the backend functionality.
-
 ---
 
-## Deployment
+#### 2.2 Docker Compose
 
-### Docker Compose Setup
+The **docker-compose.yml** file defines the services required for the application:
+- **`web` service**: The Django application running via Gunicorn.
+- **`nginx` service**: The Nginx reverse proxy that forwards requests to the Django app and serves static files.
 
-The project is configured to run using Docker Compose. Here's a breakdown of the services defined in `docker-compose.yml`:
+**Key features of the `docker-compose.yml`**:
+- **Volumes**: Maps the project directory and static files to the container, ensuring that changes made on your machine are reflected in the container.
+- **Port forwarding**: Exposes port 80 for the Nginx container and port 8000 for the web container internally.
+
+Here’s the complete `docker-compose.yml`:
 
 ```yaml
 services:
@@ -141,9 +135,6 @@ services:
       - .:/app
     expose:
       - "8000"
-    environment:
-      - DJANGO_ALLOWED_HOSTS=localhost
-      - DEBUG=1
 
   nginx:
     image: nginx:latest
@@ -151,53 +142,122 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./staticfiles:/app/staticfiles  # Share static files with Nginx
     depends_on:
       - web
 ```
 
-- **`web` service**: This is your Django application served via Gunicorn, a production-ready WSGI server. It exposes port 8000.
-- **`nginx` service**: Acts as a reverse proxy for the Django application, forwarding requests from port 80 to port 8000 inside the container.
+---
 
-### Production Deployment
-- **Environment Variables**: Ensure that `DEBUG=False` and `DJANGO_ALLOWED_HOSTS` is set to the production domain.
-- **HTTPS**: For production environments, it is recommended to configure SSL/TLS certificates for secure connections. This can be achieved with Let's Encrypt or other SSL providers.
+#### 2.3 Nginx Configuration
 
-### Scaling
-In production, you can scale your services by increasing the number of Gunicorn workers or by using Docker Compose’s `scale` feature:
+**Nginx** is used as a reverse proxy to forward requests from users to the Gunicorn server. It also serves the static files directly, improving performance for serving assets like CSS and JavaScript.
+
+**Key Features**:
+- The **/static/** route is configured to serve static files directly from the `staticfiles` directory.
+- The **location /** block proxies requests to the Django app running on port 8000.
+
+Here’s the `nginx.conf` file:
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+
+    # Serve static files
+    location /static/ {
+        alias /app/staticfiles/;
+    }
+
+    # Proxy all other requests to the Django app
+    location / {
+        proxy_pass http://web:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Optional security headers for production
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Limit upload size (optional)
+    client_max_body_size 10M;
+}
+```
+
+---
+
+### 3. Backend Configuration
+
+#### 3.1 Django Settings
+
+The `settings.py` file contains the configuration for the Django app, including static file management, database setup, and environment variables. Here are some key points:
+
+- **Static Files**: Static files like CSS, JS, and images are served from the `staticfiles` directory, which is defined in the `STATIC_ROOT` variable.
+- **Environment Variables**: Sensitive data like `SECRET_KEY` and `DEBUG` status is handled via environment variables, making it easier to configure for different environments (development vs. production).
+- **Database**: A local SQLite database is used for this project, stored as `clinical_data.db`.
+
+Key excerpt from `settings.py`:
+
+```python
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Load sensitive data from environment variables
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')  # Replace with a secure secret key
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split()
+
+# Database
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "clinical_data.db",
+    }
+}
+```
+
+---
+
+### 4. Requirements File
+
+The `requirements.txt` file lists all the dependencies required for the Django application to run. Here are some of the key libraries:
+
+- **Django**: The core web framework.
+- **Django REST Framework**: Provides the API functionality to serve filtered data to the frontend.
+- **Gunicorn**: The WSGI server used to serve the Django app in production.
+
+`requirements.txt`:
+
+```
+asgiref==3.8.1
+Django==5.1.1
+djangorestframework==3.15.2
+numpy==2.1.1
+python-dateutil==2.9.0.post0
+pytz==2024.2
+six==1.16.0
+sqlparse==0.5.1
+tzdata==2024.2
+gunicorn==20.1.0
+```
+
+---
+
+### 5. Deployment and Scaling Considerations
+
+- **Environment Variables**: Make sure to set `DEBUG=False` and provide the correct domain in `ALLOWED_HOSTS` when deploying to production.
+- **Scaling**: In production, you can scale the application horizontally by increasing the number of Gunicorn workers or using Docker Compose to scale services.
+
+For example, you can run multiple instances of the `web` service with:
 
 ```bash
 docker compose up --scale web=3
 ```
 
-This will run 3 instances of the Django application to handle more requests.
-
----
-
-## CSV Export (Bonus Feature)
-
-Users can export the filtered patient data as a CSV file. The filtered data is dynamically generated based on the selected filters, and users can click an "Export" button to download the CSV file.
-
----
-
-## Future Improvements
-
-- **Real-Time Data**: Integrate WebSockets to update the dashboard with live patient data.
-- **Improved Filtering**: Add more granular filters, such as patient location or specific treatment types.
-- **Security Enhancements**: Add two-factor authentication (2FA) for increased security.
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```
-
----
-
-### Changes Made:
-- **Removed Authentication Feature**: All mentions of authentication were removed from the original README.
-- **Removed Risk Score Feature**: All mentions of the risk score calculation were removed.
-
-This version should now accurately reflect the features of your project without referencing any features you haven’t implemented.
-
-Let me know if this works for you or if you'd like any further modifications!
+This will spawn 3 instances of the Django application, helping to handle more user requests.
