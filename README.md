@@ -18,19 +18,11 @@ Make sure you have the following tools installed on your system:
 First, clone the project repository from GitHub and navigate to the project directory:
 
 ```bash
-git clone https://github.com/yourusername/patient-dashboard.git
-cd patient-dashboard
+git clone https://github.com/MemonMustafa19/uq-test.git
+cd health_dashboard
 ```
 
-#### 1.3 Environment Configuration
-
-Create a `.env` file in the root of the project to store sensitive environment variables:
-
-```bash
-SECRET_KEY=your-secret-key  # Set this to a random, secure value for production
-DEBUG=True  # Set this to False for production environments
-DJANGO_ALLOWED_HOSTS=localhost  # Update this with your production domain or server IP
-```
+#### 1.3 Move your clinical_data.db database file into the project
 
 #### 1.4 Running the Project with Docker
 
