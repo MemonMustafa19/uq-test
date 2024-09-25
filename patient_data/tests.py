@@ -2,7 +2,6 @@ from django.test import TestCase
 from django.urls import reverse
 from .models import Patient
 from rest_framework.test import APIClient
-from datetime import datetime
 
 class PatientFilterTests(TestCase):
 
