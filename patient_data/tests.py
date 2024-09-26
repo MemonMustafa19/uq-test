@@ -6,7 +6,6 @@ from rest_framework.test import APIClient
 class PatientFilterTests(TestCase):
 
     def setUp(self):
-        # Comprehensive dataset for thorough testing
         patients = [
             # Hypertension cases
             {"patient_id": "1", "diagnosis": "Hypertension", "gender": "Male", "age": 45, "lab_results": 150.0, "date": "2024-01-15", "visit_type": "Routine Checkup", "outcome": "Admitted"},
