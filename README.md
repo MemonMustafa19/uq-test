@@ -1,7 +1,7 @@
 ## Patient Data Dashboard
 
 ### Project Overview
-This project is a **web-based dashboard** built using **Django** and **JavaScript**, which provides healthcare-related metrics and insights using patient data. The project focuses on data filtering, dynamic chart visualizations, and an interactive table for viewing individual patient records. The dashboard is containerized using **Docker** to ensure portability and ease of deployment.
+This project is a **web-based dashboard** built using **Django** and **JavaScript**, which provides healthcare-related metrics and insights using patient data. The project focuses on data filtering, dynamic chart visualisations, and an interactive table for viewing individual patient records. The dashboard is containerised using **Docker** to ensure portability and ease of deployment.
 
 ---
 
