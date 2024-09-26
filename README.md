@@ -5,7 +5,7 @@ This project is a **web-based dashboard** built using **Django** and **JavaScrip
 
 ---
 
-## 1. Clear Instructions on How to Set Up and Run the Application
+## 1. Instructions on How to Set Up and Run the Application
 
 ### 1.1 Prerequisites
 Ensure you have the following tools installed on your system:
