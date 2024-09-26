@@ -5,73 +5,78 @@ This project is a **web-based dashboard** built using **Django** and **JavaScrip
 
 ---
 
-### 1. Project Setup Instructions
+## 1. Instructions on How to Set Up and Run the Application
 
-#### 1.1 Prerequisites
-Make sure you have the following tools installed on your system:
+### 1.1 Prerequisites
+Ensure you have the following tools installed on your system:
 - **Python 3.12+**
 - **Docker** and **Docker Compose**
 - **Git**
 
-#### 1.2 Cloning the Project
+### 1.2 Cloning the Project
 
-First, clone the project repository from GitHub and navigate to the project directory:
+To begin, clone the project repository from GitHub and navigate to the project directory:
 
 ```bash
 git clone https://github.com/MemonMustafa19/uq-test.git
 cd health_dashboard
 ```
 
-#### 1.3 Move your clinical_data.db database file into the project
+### 1.3 Move Your Database File
 
-#### 1.4 Running the Project with Docker
+Place your `clinical_data.db` SQLite database file into the project directory to use the pre-existing data.
+
+### 1.4 Running the Project with Docker
 
 1. **Build and Run the Docker Containers**:
-   Using Docker Compose, you can easily spin up the environment by running the following command in the project directory:
+   To build and start the application using Docker Compose, run the following command in the project directory:
 
    ```bash
    docker compose up --build
    ```
 
    This command will:
-   - Build the **Django** web app container.
-   - Start the **Nginx** container to serve as a reverse proxy.
+   - Build the **Django** web application container.
+   - Start the **Nginx** container to act as a reverse proxy.
    - Serve the application on `http://localhost`.
 
 2. **Run Database Migrations**:
-   After the services are up and running, you’ll need to apply the database migrations to set up the SQLite database:
+   After the services are up and running, apply the necessary database migrations to set up the SQLite database schema:
 
    ```bash
    docker compose exec web python manage.py migrate
    ```
 
 3. **Collect Static Files**:
-   In a production setting, Django needs to collect static files like CSS and JavaScript into a single location. Run the following command to collect the static files:
+   Django needs to collect static files (CSS, JavaScript) into a single directory in production. Run the following command to collect static files:
 
    ```bash
    docker compose exec web python manage.py collectstatic --noinput
    ```
 
 4. **Access the Dashboard**:
-   Once everything is set up, open your browser and go to `http://localhost` to view the dashboard.
+   Once everything is configured and running, open your browser and navigate to `http://localhost` to view and use the dashboard.
 
 ---
 
-### 2. Key Components and Architecture
+## 2. Deploying the Dashboard to a Production Server Using Docker
 
-#### 2.1 Dockerfile
+### Dockerisation for Production
 
-The **Dockerfile** describes how the application container is built. Key steps include installing dependencies, collecting static files, and setting up the Gunicorn server to run the Django app.
+To deploy the dashboard to a production server using Docker, follow these steps:
 
-**Key Features:**
-- **Python 3.12-slim** is used as the base image to reduce image size.
-- **Gunicorn** is used as the WSGI server to serve the Django app efficiently in a production environment.
-- **Static file collection** is automated during the Docker image build process, so you don’t need to manage static files separately.
+### 2.1 Creating the Dockerfile
 
-Here's an excerpt from the `Dockerfile`:
+The **Dockerfile** describes the process of building the application container. This includes installing dependencies, setting up the Gunicorn server, and collecting static files.
+
+Key steps in the Dockerfile:
+- Use **Python 3.12-slim** to keep the image lightweight.
+- Install dependencies from the `requirements.txt` file.
+- Collect static files and use **Gunicorn** as the production server.
+
+Here’s an example Dockerfile:
 
 ```dockerfile
-# Step 1: Use Python 3.12-slim as a base image
 FROM python:3.12-slim
 
 # Set environment variables
@@ -98,19 +103,15 @@ EXPOSE 8000
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "health_dashboard.wsgi:application"]
 ```
 
----
+### 2.2 Docker Compose Setup
 
-#### 2.2 Docker Compose
+Docker Compose simplifies the orchestration of multiple services like Django and Nginx.
 
-The **docker-compose.yml** file defines the services required for the application:
-- **`web` service**: The Django application running via Gunicorn.
-- **`nginx` service**: The Nginx reverse proxy that forwards requests to the Django app and serves static files.
+The **docker-compose.yml** file defines two key services:
+- **`web` service**: Runs the Django application using Gunicorn.
+- **`nginx` service**: Acts as a reverse proxy to serve static files and forward user requests to the Django app.
 
-**Key features of the `docker-compose.yml`**:
-- **Volumes**: Maps the project directory and static files to the container, ensuring that changes made on your machine are reflected in the container.
-- **Port forwarding**: Exposes port 80 for the Nginx container and port 8000 for the web container internally.
-
-Here’s the complete `docker-compose.yml`:
+Here’s the `docker-compose.yml`:
 
 ```yaml
 services:
@@ -128,22 +129,16 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./staticfiles:/app/staticfiles  # Share static files with Nginx
+      - ./staticfiles:/app/staticfiles
     depends_on:
       - web
 ```
 
----
+### 2.3 Nginx Configuration
 
-#### 2.3 Nginx Configuration
+Nginx is responsible for handling static files and forwarding requests to the Django app through Gunicorn. The configuration file (`nginx.conf`) defines how Nginx serves static files from the `staticfiles` directory and how it proxies all other requests to Gunicorn.
 
-**Nginx** is used as a reverse proxy to forward requests from users to the Gunicorn server. It also serves the static files directly, improving performance for serving assets like CSS and JavaScript.
-
-**Key Features**:
-- The **/static/** route is configured to serve static files directly from the `staticfiles` directory.
-- The **location /** block proxies requests to the Django app running on port 8000.
-
-Here’s the `nginx.conf` file:
+Here’s an example Nginx configuration:
 
 ```nginx
 server {
@@ -164,86 +159,129 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Optional security headers for production
+    # Security headers
     add_header X-Frame-Options SAMEORIGIN;
     add_header X-Content-Type-Options nosniff;
     add_header X-XSS-Protection "1; mode=block";
 
-    # Limit upload size (optional)
+    # Limit upload size
     client_max_body_size 10M;
 }
 ```
 
----
+### 2.4 Managing Environment Variables
 
-### 3. Backend Configuration
+To ensure the app runs correctly in both development and production, environment variables should be used to manage sensitive data like the secret key, debug status, and allowed hosts.
 
-#### 3.1 Django Settings
+Example `.env` file:
 
-The `settings.py` file contains the configuration for the Django app, including static file management, database setup, and environment variables. Here are some key points:
-
-- **Static Files**: Static files like CSS, JS, and images are served from the `staticfiles` directory, which is defined in the `STATIC_ROOT` variable.
-- **Environment Variables**: Sensitive data like `SECRET_KEY` and `DEBUG` status is handled via environment variables, making it easier to configure for different environments (development vs. production).
-- **Database**: A local SQLite database is used for this project, stored as `clinical_data.db`.
-
-Key excerpt from `settings.py`:
-
-```python
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# Load sensitive data from environment variables
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')  # Replace with a secure secret key
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split()
-
-# Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "clinical_data.db",
-    }
-}
+```env
+SECRET_KEY=your-production-secret-key
+DEBUG=False  # Set to False in production
+DJANGO_ALLOWED_HOSTS=your-production-domain.com
 ```
 
----
+Make sure to set `DEBUG=False` and provide the correct domain name in `ALLOWED_HOSTS` for security reasons.
 
-### 4. Requirements File
+### 2.5 Scaling the Application
 
-The `requirements.txt` file lists all the dependencies required for the Django application to run. Here are some of the key libraries:
-
-- **Django**: The core web framework.
-- **Django REST Framework**: Provides the API functionality to serve filtered data to the frontend.
-- **Gunicorn**: The WSGI server used to serve the Django app in production.
-
-`requirements.txt`:
-
-```
-asgiref==3.8.1
-Django==5.1.1
-djangorestframework==3.15.2
-numpy==2.1.1
-python-dateutil==2.9.0.post0
-pytz==2024.2
-six==1.16.0
-sqlparse==0.5.1
-tzdata==2024.2
-gunicorn==20.1.0
-```
-
----
-
-### 5. Deployment and Scaling Considerations
-
-- **Environment Variables**: Make sure to set `DEBUG=False` and provide the correct domain in `ALLOWED_HOSTS` when deploying to production.
-- **Scaling**: In production, you can scale the application horizontally by increasing the number of Gunicorn workers or using Docker Compose to scale services.
-
-For example, you can run multiple instances of the `web` service with:
+In production, you may need to scale the application to handle more traffic. Docker Compose allows you to run multiple instances of the `web` service:
 
 ```bash
 docker compose up --scale web=3
 ```
 
-This will spawn 3 instances of the Django application, helping to handle more user requests.
+This command will run 3 instances of the Django application to distribute the load and improve the app’s ability to handle multiple requests simultaneously.
+
+### 2.6 Security Considerations
+
+For production deployments, ensure:
+- **HTTPS**: Use an SSL/TLS certificate (e.g., via Let's Encrypt) for secure communication.
+- **Environment Variables**: Ensure sensitive data like `SECRET_KEY` is stored securely and never hard-coded.
+- **Static Files**: Ensure Nginx serves static files efficiently to reduce the load on Django.
+
+---
+
+## 3. Explanations of Key Decisions Made During the Development Process
+
+### 3.1 Models (Data Representation)
+
+The **`Patient` model** is the core of the application, representing how patient data is stored and retrieved.
+
+Key decisions:
+- **Structured Data Storage**: 
+  - Fields like `diagnosis`, `gender`, and `lab_results` allow for easy querying and filtering of patient records.
+  - The `primary_key=True` on `patient_id` ensures that each patient is uniquely identifiable.
+
+- **Optional Fields**: 
+  - The `medication` field is optional (`null=True, blank=True`), allowing flexibility in cases where a patient may not have any prescribed medication.
+
+- **Custom Table Name**: 
+  - Using `Meta` to set a custom table name (`patient_data`) improves the clarity of the database schema.
+
+### 3.2 API Design with Django REST Framework
+
+The API endpoints serve patient data and filter options to the frontend via Django REST Framework.
+
+Key decisions:
+- **Efficient Serialization**: 
+  - **`PatientSerializer`** is a `ModelSerializer`, which simplifies the process of serializing model data into JSON format for API responses.
+
+- **Filter Options API**:
+  - The **filter options** endpoint dynamically retrieves distinct values for diagnosis, gender, and visit type, making the frontend adaptable to changes in the dataset.
+
+- **CSV Export**: 
+  - The API endpoint for exporting patient data in CSV format is crucial for healthcare professionals who need to perform offline analysis.
+
+### 3.3 Filtering Logic
+
+Filtering patient data based on diagnosis, gender, visit type, and date range is a critical feature.
+
+Key decisions:
+- **Multiple Criteria Filtering**: 
+  - The use of `getlist` allows users to filter by multiple values in each category, providing a flexible and powerful filtering mechanism.
+
+- **Date Range Filtering**: 
+  - Allowing both start and end dates (`from_date`, `to_date`) ensures that users can precisely filter records within specific timeframes.
+
+### 3.4 Frontend (UI & UX)
+
+The user interface provides a seamless experience for filtering data and viewing results in a dynamic and interactive way.
+
+Key decisions:
+- **Multi-Select Filters**: 
+  - The **Select2** library is used for searchable, multi-select dropdowns, improving usability when there are many filter options.
+
+- **Real-Time Data Loading**: 
+  - Data is loaded dynamically into the DataTable and Chart.js visualisation based on the selected filters, providing an interactive experience without page reloads.
+
+- **CSV Export**: 
+  - Users can export filtered patient data to CSV format for further offline analysis, making the dashboard more versatile.
+
+### 3.5 Testing
+
+Comprehensive testing ensures the robustness of the filtering logic and API endpoints.
+
+Key decisions:
+- **Diverse Dataset**: 
+  - The `setUp` method creates a diverse set of test patients to validate the filtering logic against various combinations of diagnoses, genders, visit types, and outcomes.
+
+- **Comprehensive Filter Testing**: 
+  - Tests cover filtering by individual criteria as well as combinations, ensuring that the filtering works as expected across different scenarios.
+
+- **CSV Export Validation**: 
+  - Tests verify that the CSV export functionality correctly generates and downloads the filtered patient data.
+
+### 3.6 Dockerisation and Deployment
+
+The use of Docker and Docker Compose ensures a smooth deployment process.
+
+Key decisions:
+- **Lightweight Container**: 
+  - The **Python 3.12-slim** base image ensures a lightweight container, reducing build time and resource consumption.
+
+- **Gunicorn for Production**: 
+  - **Gunicorn** is chosen as the WSGI server to handle multiple requests concurrently, making it a production-ready solution.
+
+- **Nginx Reverse Proxy**: 
+  - Using **Nginx** to serve static files and forward requests to the Django app ensures that static assets are served efficiently, reducing the load on the application.
