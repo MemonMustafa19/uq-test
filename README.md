@@ -43,7 +43,7 @@ Place your `clinical_data.db` SQLite database file into the project directory to
 2. **Run Database Migrations**:
    After the services are up and running, you need to apply the database migrations to create the required core Django tables (e.g., `auth`, `admin`, `sessions`). However, if the `patient_data` table already exists in your database, you need to **fake the migration** for it to prevent Django from trying to recreate that table.
 
-   - If your database already has the `patient_data` table, run the following command to **fake the migration** for that app:
+   - **If your database already has the `patient_data` table**, run the following command to **fake the migration** for that app:
 
      ```bash
      docker compose exec web python manage.py migrate --fake patient_data
@@ -68,6 +68,15 @@ Place your `clinical_data.db` SQLite database file into the project directory to
 
 4. **Access the Dashboard**:
    Once everything is configured and running, open your browser and navigate to `http://localhost` to view and use the dashboard.
+
+5. **Stop the Docker Containers**:
+   When you are done running the project, you can gracefully stop and remove the containers by using:
+
+   ```bash
+   docker compose down
+   ```
+
+   This will stop and remove the Docker containers, networks, and volumes that were created for the project.
 
 ---
 
