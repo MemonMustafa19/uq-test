@@ -43,24 +43,24 @@ The database (`clinical_data.db`) is **not included in the Git repository**. You
    - Start the **Nginx** container to act as a reverse proxy.
    - Serve the application on `http://localhost`.
 
-2. **Run Database Migrations**:
-   After the services are up and running, you need to apply the database migrations to create the required core Django tables (e.g., `auth`, `admin`, `sessions`). However, if the `patient_data` table already exists in your database, you need to **fake the migration** for it to prevent Django from trying to recreate that table.
+### 2. **Run Database Migrations**:
+   After the services are up and running, you need to apply the database migrations to create the core Django tables (e.g., `auth`, `admin`, `sessions`) and ensure the `patient_data` table is correctly handled.
 
-   - **If your database already has the `patient_data` table**, run the following command to **fake the migration** for that app:
+   - **If your database already has the `patient_data` table**, you need to **fake the migration** for that app to prevent Django from trying to recreate the table:
 
      ```bash
      docker compose exec web python manage.py migrate --fake patient_data
      ```
 
-     This will tell Django to skip creating the `patient_data` table, as it already exists.
+     This step is necessary to mark the `patient_data` migration as complete.
 
-   - **If you are starting with a new database** or if the `patient_data` table doesn't exist, run the following command to apply the migrations for all tables (including `patient_data`):
+   - **Next, run the following command to apply the migrations for the core Django tables** (e.g., `auth`, `admin`, `sessions`). This step is essential for all users, regardless of the presence of the `patient_data` table, and will also create the `patient_data` table if it doesn’t exist already:
 
      ```bash
      docker compose exec web python manage.py migrate
      ```
 
-   This will apply all the migrations for the core Django tables and create the `patient_data` table if necessary.
+     This command will create the necessary Django core tables and ensure all migrations are applied correctly.
 
 3. **Collect Static Files**:
    Django needs to collect static files (CSS, JavaScript) into a single directory in production. Run the following command to collect static files:
