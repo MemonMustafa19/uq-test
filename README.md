@@ -19,7 +19,7 @@ To begin, clone the project repository from GitHub and navigate to the project d
 
 ```bash
 git clone https://github.com/MemonMustafa19/uq-test.git
-cd health_dashboard
+cd uq-test
 ```
 
 ### 1.3 Move Your Database File
@@ -41,11 +41,23 @@ Place your `clinical_data.db` SQLite database file into the project directory to
    - Serve the application on `http://localhost`.
 
 2. **Run Database Migrations**:
-   After the services are up and running, apply the necessary database migrations to set up the SQLite database schema:
+   After the services are up and running, you need to apply the database migrations to create the required core Django tables (e.g., `auth`, `admin`, `sessions`). However, if the `patient_data` table already exists in your database, you need to **fake the migration** for it to prevent Django from trying to recreate that table.
 
-   ```bash
-   docker compose exec web python manage.py migrate
-   ```
+   - If your database already has the `patient_data` table, run the following command to **fake the migration** for that app:
+
+     ```bash
+     docker compose exec web python manage.py migrate --fake patient_data
+     ```
+
+     This will tell Django to skip creating the `patient_data` table, as it already exists.
+
+   - After faking the migration (if applicable), or if the `patient_data` table doesn't exist, run the following command to apply the migrations for all the other core tables:
+
+     ```bash
+     docker compose exec web python manage.py migrate
+     ```
+
+   This will apply all the migrations for the core Django tables without affecting the `patient_data` table.
 
 3. **Collect Static Files**:
    Django needs to collect static files (CSS, JavaScript) into a single directory in production. Run the following command to collect static files:
