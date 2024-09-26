@@ -1,23 +1,21 @@
-# Python
-__pycache__/
+# Python bytecode files
 *.pyc
-*.pyo
+__pycache__/
 
-# Environment
+# Virtual environments
 env/
 venv/
-.env
+ENV/
 
-# Database
-*.sqlite3
-*.db
+# Django database file
+clinical_data.db
 
-# Django migrations
-*/migrations/
+# Django static files (collected for production)
+staticfiles/
 
-# IDE and Editor settings
+# macOS-specific files
+.DS_Store
+
+# IDE/editor configs
 .vscode/
 .idea/
-
-# Mac specific files
-.DS_Store
