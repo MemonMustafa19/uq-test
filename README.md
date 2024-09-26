@@ -19,7 +19,7 @@ To begin, clone the project repository from GitHub and navigate to the project d
 
 ```bash
 git clone https://github.com/MemonMustafa19/uq-test.git
-cd health_dashboard
+cd uq-test
 ```
 
 ### 1.3 Move Your Database
