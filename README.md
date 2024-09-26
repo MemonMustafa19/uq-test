@@ -5,12 +5,12 @@ This project is a **web-based dashboard** built using **Django** and **JavaScrip
 
 ---
 
-## 1. Instructions on How to Set Up and Run the Application
+## 1. Clear Instructions on How to Set Up and Run the Application
 
 ### 1.1 Prerequisites
 Ensure you have the following tools installed on your system:
 - **Python 3.12+**
-- **Docker** and **Docker Compose**
+- **Docker Desktop for Mac** (these steps are specifically for macOS)
 - **Git**
 
 ### 1.2 Cloning the Project
@@ -19,17 +19,20 @@ To begin, clone the project repository from GitHub and navigate to the project d
 
 ```bash
 git clone https://github.com/MemonMustafa19/uq-test.git
-cd uq-test
+cd health_dashboard
 ```
 
-### 1.3 Move Your Database File
+### 1.3 Move Your Database
 
-Place your `clinical_data.db` SQLite database file into the project directory to use the pre-existing data.
+The database (`clinical_data.db`) is **not included in the Git repository**. You need to either:
+
+- **Move your existing database** file (`clinical_data.db`) into the project directory, or
+- **Create a new database** by following the migration steps below if you're starting fresh.
 
 ### 1.4 Running the Project with Docker
 
 1. **Build and Run the Docker Containers**:
-   To build and start the application using Docker Compose, run the following command in the project directory:
+   To build and start the application using Docker Compose on Docker Desktop for Mac, run the following command in the project directory:
 
    ```bash
    docker compose up --build
@@ -51,13 +54,13 @@ Place your `clinical_data.db` SQLite database file into the project directory to
 
      This will tell Django to skip creating the `patient_data` table, as it already exists.
 
-   - After faking the migration (if applicable), or if the `patient_data` table doesn't exist, run the following command to apply the migrations for all the other core tables:
+   - **If you are starting with a new database** or if the `patient_data` table doesn't exist, run the following command to apply the migrations for all tables (including `patient_data`):
 
      ```bash
      docker compose exec web python manage.py migrate
      ```
 
-   This will apply all the migrations for the core Django tables without affecting the `patient_data` table.
+   This will apply all the migrations for the core Django tables and create the `patient_data` table if necessary.
 
 3. **Collect Static Files**:
    Django needs to collect static files (CSS, JavaScript) into a single directory in production. Run the following command to collect static files:
