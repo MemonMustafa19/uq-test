@@ -43,7 +43,7 @@ The database (`clinical_data.db`) is **not included in the Git repository**. You
    - Start the **Nginx** container to act as a reverse proxy.
    - Serve the application on `http://localhost`.
 
-### 2. **Run Database Migrations**:
+2. **Run Database Migrations**:
    After the services are up and running, you need to apply the database migrations to create the core Django tables (e.g., `auth`, `admin`, `sessions`) and ensure the `patient_data` table is correctly handled.
 
    - **If your database already has the `patient_data` table**, you need to **fake the migration** for that app to prevent Django from trying to recreate the table:
